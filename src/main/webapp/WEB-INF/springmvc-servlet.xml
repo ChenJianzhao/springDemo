@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="
+       http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd
+       http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+        ">
+
+    <!-- 需要在 controller 中注入的properties属性必须在 springmvc-servlet.xml 中读入-->
+    <!--  加入 ignore-unresolvable="true" ，避免 could not resolve placeholder 异常-->
+    <context:property-placeholder location="classpath:config.properties" ignore-unresolvable="true"/>
+    <!--打开spring 包扫描功能，不可缺少-->
+    <context:component-scan base-package="org.demo.controller"/>
+    <!-- 打开mvc注解  -->
+    <mvc:annotation-driven/>
+    <!-- 将静态文件指定到某个特殊的文件夹中统一处理  -->
+    <!--  一个*表文件夹中内容，第二个星指子文件夹中的内容 -->
+    <mvc:resources location="/resource/" mapping="/resources/**" />
+
+    <!-- 配置 JSP 视图解析器(ViewResolver) 一般JSP使用 InternalResourceViewResolver -->
+    <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+        <property name="prefix" value="/WEB-INF/jsp/" />
+        <property name="suffix" value=".jsp" />
+    </bean>
+
+    <!--配置文件上传 MultipartResolver  -->
+    <bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+        <property name="maxUploadSize" value="5000000" />
+        <property name="uploadTempDir" value="WEB-INF/upload/temp" />
+        <property name="defaultEncoding" value="UTF-8" />
+    </bean>
+
+    <!--&lt;!&ndash; ②：启动Spring MVC的注解功能，完成请求和注解POJO的映射 &ndash;&gt;-->
+    <!--<bean class="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping"> </bean>-->
+    <!--<bean class="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter">-->
+        <!--<property name="messageConverters">-->
+            <!--<list>-->
+                <!--<bean class="org.springframework.http.converter.json.MappingJackson2HttpMessageConverter" />-->
+            <!--</list>-->
+        <!--</property>-->
+    <!--</bean>-->
+</beans>
