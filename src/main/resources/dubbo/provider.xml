@@ -1,11 +1,132 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<beans xmlns="http://www.springframework.org/schema/beans"
-       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xmlns:dubbo="http://code.alibabatech.com/schema/dubbo" xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://code.alibabatech.com/s chema/dubbo http://code.alibabatech.com/schema/dubbo/dubbo.xsd">
-    <!-- 提供方应用信息，用于计算依赖关系 -->
-    <dubbo:application name="hello-world-app" /> <!-- 使用multicast广播注册中心暴露服务地址 -->
-    <dubbo:registry address="multicast://224.5.6.7:1234" /> <!-- 用dubbo协议在20880端口暴露服务 -->
-    <dubbo:protocol name="dubbo" port="20880" /> <!-- 声明需要暴露的服务接口 -->
-    <dubbo:service interface="com.alibaba.dubbo.demo.DemoService" ref="demoService" />
-    <!-- 和本地bean一样实现服务 -->
-    <bean id="demoService" class="com.alibaba.dubbo.demo.provider.DemoServiceImpl" /> </beans>
+<beans 	xmlns="http://www.springframework.org/schema/beans"
+		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		xmlns:dubbo="http://code.alibabatech.com/schema/dubbo"
+		xsi:schemaLocation="
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd 
+		http://code.alibabatech.com/schema/dubbo http://code.alibabatech.com/schema/dubbo/dubbo.xsd">
+
+	<!-- 提供方应用信息，用于计算依赖关系 -->
+	<dubbo:application name="hello-world-app" />
+	
+	<!-- 使用multicast广播注册中心暴露服务地址 -->
+	<dubbo:registry address="zookeeper://localhost:2181" />
+	
+	<!-- 用dubbo协议在20880端口暴露服务 -->
+	<dubbo:protocol name="dubbo" port="20880" />
+	
+	<!-- 声明需要暴露的服务接口 -->
+	<dubbo:service interface="org.demo.dubbo.DemoService" ref="demoService" />
+	
+	<!-- 和本地bean一样实现服务 -->
+	<bean id="demoService" class="org.demo.dubbo.impl.DemoServiceImpl" />
+	
+	
+	<!-- 【※】更多配置 -->
+	
+	
+	<!-- 
+		【※】集群容错模式：
+		failfast 	快速失败，只发起一次调用，失败立即报错（默认）
+		failsafe 	失败安全，出现异常时，直接忽略
+		failback 	失败自动恢复，后台记录失败请求，定时重发
+		forking 	并行调用多个服务器，只要一个成功即返回
+		broadcast 	广播调用所有提供者，逐个调用，任意一台报错则报错 -->
+	<!-- <dubbo:service interface="..." cluster="failover" retries="2"/> -->
+	
+	
+	<!-- 
+		【※】负载均衡： 
+		Random		随机，按权重设置随机概率
+		RoundRobin	轮循，按公约后的权重设置轮循比率
+		LeastActive	最少活跃调用数，相同活跃数的随机，活跃数指调用前后计数差
+		ConsistentHash	一致性 Hash，相同参数的请求总是发到同一提供者。缺省只对第一个参数 Hash -->
+	<!-- <dubbo:service interface="..." loadbalance="roundrobin" /> -->
+	
+	
+	<!-- 
+		【※】线程模型 Dispatcher
+		all 		所有消息都派发到线程池，包括请求，响应，连接事件，断开事件，心跳等。
+		direct 		所有消息都不派发到线程池，全部在 IO 线程上直接执行。
+		message 	只有请求响应消息派发到线程池，其它连接断开事件，心跳等消息，直接在 IO线程上执行。
+		execution 	只请求消息派发到线程池，不含响应，响应和其它连接断开事件，心跳等消息，直接在 IO 线程上执行。
+		connection 	在 IO 线程上，将连接断开事件放入队列，有序逐个执行，其它消息派发到
+
+		线程池 ThreadPool
+		fixed 	固定大小线程池，启动时建立线程，不关闭，一直持有。(缺省)
+		cached 	缓存线程池，空闲一分钟自动删除，需要时重建。
+		limited 可伸缩线程池，但池中的线程数只会增长不会收缩。只增长不收缩的目的是为了避免收缩时突然来了大流量引起的性能问题。
+	-->
+	<!-- <dubbo:protocol name="dubbo" dispatcher="all" threadpool="fixed" threads="100" /> -->
+	
+	
+	<!-- 
+		【※】只订阅 ：
+		可以让服务提供者开发方，只订阅服务(开发的服务可能依赖其它服务)，而不注册正在开发的服务，通过直连测试正在开发的服务。-->
+	<!-- <dubbo:registry address="10.20.153.10:9090" register="false" /> -->
+	
+	
+	<!-- 
+		【※】只注册：
+		如果有两个镜像环境，两个注册中心，有一个服务只在其中一个注册中心有部署，另一个注册中心还没来得及部署，
+		而两个注册中心的其它应用都需要依赖此服务。这个时候，可以让服务提供者方只注册服务到另一注册中心，而不从另一注册中心订阅服务。-->
+	<!-- <dubbo:registry id="hzRegistry" address="10.20.153.10:9090" /> --> 					
+	<!-- <dubbo:registry id="qdRegistry" address="10.20.141.150:9090" subscribe="false" /> --> <!-- 只向这个注册中心发布服务，不订阅还没部署完成的服务 -->
+	
+	
+	<!-- 
+		【※】多协议配置
+	 -->
+	<!-- 不同服务不同协议 -->
+	<!-- <dubbo:protocol name="dubbo" port="20880" /> -->
+	<!-- <dubbo:protocol name="rmi" port="1099" /> -->
+	<!-- <dubbo:service interface="com.alibaba.hello.api.HelloService" version="1.0.0" ref="helloService" protocol="dubbo" /> -->
+	
+	<!-- 使用多个协议暴露服务 -->
+	<!-- <dubbo:service id="helloService" interface="com.alibaba.hello.api.HelloService" version="1.0.0" protocol="dubbo,hessian" /> -->
+	
+	
+	
+	<!-- 
+		【※】多注册中心配置
+	 -->
+	<!-- <dubbo:registry id="hangzhouRegistry" address="10.20.141.150:9090" /> -->
+	<!-- <dubbo:registry id="qingdaoRegistry" address="10.20.141.151:9010" default="false"/> -->
+	<!-- 向多个注册中心注册 -->
+	<!-- <dubbo:service interface="com.alibaba.hello.api.HelloService" version="1.0.0" ref="helloService" registry="hangzhouRegistry,qingdaoRegistry" /> -->
+	<!-- 不同服务使用不同注册中心 -->
+	<!-- <dubbo:service interface="com.alibaba.hello.api.HelloService" version="1.0.0" ref="helloService" registry="chinaRegistry" /> -->
+	<!-- <dubbo:service interface="com.alibaba.hello.api.DemoService" version="1.0.0" ref="demoService" registry="intlRegistry" /> -->
+	
+	
+	<!-- 
+		【※】服务分组当
+		一个接口有多种实现时，可以用 group 区分（使用同个id）） -->
+		<!-- 服务  -->
+	<!-- <dubbo:service group="feedback" interface="com.xxx.IndexService" /> -->
+	<!-- <dubbo:service group="member" interface="com.xxx.IndexService" /> -->
+
+	<!-- 引用 -->
+	<!-- <dubbo:reference id="feedbackIndexService" group="feedback" interface="com.xxx.IndexService" /> -->
+	<!-- <dubbo:reference id="memberIndexService" group="member" interface="com.xxx.IndewxService" /> -->
+
+	<!-- 任意组 ： -->
+	<!-- <dubbo:reference id="barService" interface="com.foo.BarService" group="*" /> -->
+
+
+	<!-- 【※】多版本
+		当一个接口实现，出现不兼容升级时，可以用版本号过渡，版本号不同的服务相互间不引用。 -->
+	<!-- 新版本服务提供者配置： -->
+	<!-- <dubbo:service interface="com.foo.BarService" version="2.0.0" /> -->
+	
+	
+	<!-- 【※】本地调用
+		本地调用使用了 injvm 协议，是一个伪协议，它不开启端口，不发起远程调用，只在 JVM 内直接关联，但执行 Dubbo 的 Filter 链。 -->
+	<!-- 定义 injvm 协议 -->
+	<!-- <dubbo:protocol name="injvm" /> -->
+	<!-- 设置默认协议 -->
+	<!-- <dubbo:provider protocol="injvm" /> -->
+	<!-- 设置服务协议 -->
+	<!-- <dubbo:service protocol="injvm" /> -->
+
+</beans>
