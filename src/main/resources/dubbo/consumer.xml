@@ -14,11 +14,16 @@
 	
 	<!-- 生成远程服务代理，可以和本地bean一样使用demoService -->
 	<!-- <dubbo:reference id="demoService" interface="org.demo.dubbo.DemoService" /> -->
-	<dubbo:reference id="demoService" interface="org.demo.dubbo.DemoService" url="dubbo://localhost:20880" />
+	
+	
 	
 	<!-- 【※】更多配置 -->
+	
+	
+	<!-- 【※】启动检查 -->
 	<!-- 关闭所有服务的启动时检查 (没有提供者时报错)：默认 check="true" -->
 	<!-- <dubbo:consumer check="false" /> -->
+
 
 	<!--  
 		【※】集群容错模式： -->
@@ -112,7 +117,19 @@
 	<!-- 如果你只是想异步，完全忽略返回值，可以配置 return="false" ，以减少 Future 对象的创建和管理成本 -->
 	<!-- <dubbo:method name="findFoo" async="true" return="false" /> -->
 	
-	
-	
+	<!-- 【※】参数回调
+		参数回调方式与调用本地 callback 或 listener 相同，只需要在 Spring 的配置文件中声明哪个参数是 callback 类型即可。
+		Dubbo 将基于长连接生成反向代理，这样就可以从服务器端调用客户端逻辑 -->
+	<!-- 注：参数回调不能绕过注册中心直连提供者，会报错 -->
+	<dubbo:reference id="callbackService" interface="org.demo.dubbo.callback.CallbackService" />
 
+
+	<!-- 【※】事件通知 
+		在调用之前、调用之后、出现异常时，会触发 oninvoke 、 onreturn 、 onthrow 三个事件，
+		可以配置当事件发生时，通知哪个类的哪个方法 。-->
+	<bean id ="demoCallback" class = "org.demo.dubbo.callback.impl.NotifyImpl" />
+	<dubbo:reference id="demoService" interface="org.demo.dubbo.DemoService" >
+		<dubbo:method name="sayHello" async="false" onreturn = "demoCallback.onreturn" onthrow="demoCallback.onthrow" />
+	</dubbo:reference>
+	
 </beans>

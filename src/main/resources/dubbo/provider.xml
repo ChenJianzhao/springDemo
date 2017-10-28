@@ -16,10 +16,11 @@
 	<dubbo:protocol name="dubbo" port="20880" />
 	
 	<!-- 声明需要暴露的服务接口 -->
-	<dubbo:service interface="org.demo.dubbo.DemoService" ref="demoService" />
+	<!-- <dubbo:service interface="org.demo.dubbo.DemoService" ref="demoService" /> -->
 	
 	<!-- 和本地bean一样实现服务 -->
 	<bean id="demoService" class="org.demo.dubbo.impl.DemoServiceImpl" />
+	
 	
 	
 	<!-- 【※】更多配置 -->
@@ -129,4 +130,28 @@
 	<!-- 设置服务协议 -->
 	<!-- <dubbo:service protocol="injvm" /> -->
 
+	
+	
+	<!-- 【※】参数回调
+		参数回调方式与调用本地 callback 或 listener 相同，只需要在 Spring 的配置文件中声明哪个参数是 callback 类型即可。
+		Dubbo 将基于长连接生成反向代理，这样就可以从服务器端调用客户端逻辑 -->
+	<!-- <dubbo:service interface="org.demo.dubbo.callback.CallbackService" ref="callbackService" connections="1" callbacks="1000"> -->
+		<!-- <dubbo:method name="addListener"> -->
+			<!-- <dubbo:argument index="1" callback="true" /> -->
+			<!--也可以通过指定类型的方式-->
+			<!--<dubbo:argument type="com.demo.CallbackListener" callback="true" />-->
+		<!-- </dubbo:method> -->
+	<!-- </dubbo:service> -->
+	<!-- <bean id="callbackService" class="org.demo.dubbo.callback.impl.CallbackServiceImpl" /> -->
+	
+	
+	<!-- 【※】本地存根
+		远程服务后，客户端通常只剩下接口，而实现全在服务器端，但提供方有些时候想在客户端也执行部分逻辑，比如：做 ThreadLocal 缓存，提前验证参数，调用失败后伪造容错数据等等，
+		此时就需要在 API 中带上 Stub，客户端生成 Proxy 实例，会把 Proxy 通过构造函数传给Stub ，然后把 Stub 暴露给用户，Stub 可以决定要不要去调 Proxy。-->
+	<!-- <dubbo:service interface="org.demo.dubbo.DemoService" ref="demoService" stub="org.demo.dubbo.stub.DemoServiceStub" /> -->	
+	
+	
+	<!--【※】本地伪装
+		本地伪装 通常用于服务降级，比如某验权服务，当服务提供方全部挂掉后，客户端不抛出异常，而是通过 Mock 数据返回授权失败。 -->
+	<dubbo:service interface="org.demo.dubbo.DemoService"  ref="demoService"  mock="org.demo.dubbo.mock.DemoServiceMock" />
 </beans>
